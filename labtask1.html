@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova Calculator</title>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --bg: #070812;
+        --card: rgba(18, 21, 37, 0.88);
+        --display: #0b0e1a;
+        --button: #171b2c;
+        --button-hover: #22283e;
+
+        --white: #f8f9ff;
+        --muted: #707792;
+
+        --purple: #8b5cf6;
+        --purple-light: #a78bfa;
+        --cyan: #22d3ee;
+        --pink: #ec4899;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-family: "Inter", sans-serif;
+        color: var(--white);
+
+        background:
+            radial-gradient(
+                circle at 15% 15%,
+                rgba(139, 92, 246, 0.22),
+                transparent 30%
+            ),
+            radial-gradient(
+                circle at 85% 85%,
+                rgba(34, 211, 238, 0.16),
+                transparent 30%
+            ),
+            var(--bg);
+
+        overflow: hidden;
+    }
+
+    /* Background grid */
+
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+
+        background-image:
+            linear-gradient(
+                rgba(255,255,255,0.025) 1px,
+                transparent 1px
+            ),
+            linear-gradient(
+                90deg,
+                rgba(255,255,255,0.025) 1px,
+                transparent 1px
+            );
+
+        background-size: 45px 45px;
+
+        mask-image:
+            linear-gradient(
+                to bottom,
+                transparent,
+                black 20%,
+                black 80%,
+                transparent
+            );
+
+        pointer-events: none;
+    }
+
+    /* Decorative glowing circles */
+
+    .orb {
+        position: fixed;
+
+        width: 220px;
+        height: 220px;
+
+        border-radius: 50%;
+
+        filter: blur(80px);
+
+        opacity: 0.35;
+
+        pointer-events: none;
+    }
+
+    .orb-one {
+        top: -100px;
+        right: -80px;
+        background: var(--purple);
+    }
+
+    .orb-two {
+        bottom: -100px;
+        left: -80px;
+        background: var(--cyan);
+    }
+
+    /* Calculator */
+
+    .calculator {
+        position: relative;
+        z-index: 2;
+
+        width: min(410px, 94vw);
+
+        padding: 22px;
+
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 30px;
+
+        background: var(--card);
+
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+
+        box-shadow:
+            0 35px 80px rgba(0,0,0,0.5),
+            inset 0 1px 0 rgba(255,255,255,0.05);
+
+        animation: appear 0.7s ease;
+    }
+
+    @keyframes appear {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Header */
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-bottom: 20px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+
+        letter-spacing: 3px;
+    }
+
+    .logo-dot {
+        width: 9px;
+        height: 9px;
+
+        border-radius: 50%;
+
+        background: var(--cyan);
+
+        box-shadow:
+            0 0 10px var(--cyan),
+            0 0 20px rgba(34,211,238,0.5);
+    }
+
+    .status {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+
+        color: #596078;
+
+        font-size: 9px;
+        font-weight: 700;
+
+        letter-spacing: 1.5px;
+    }
+
+    .status span {
+        width: 6px;
+        height: 6px;
+
+        border-radius: 50%;
+
+        background: #4ade80;
+
+        box-shadow: 0 0 8px #4ade80;
+    }
+
+    /* Display */
+
+    .display {
+        height: 160px;
+
+        padding: 22px;
+
+        margin-bottom: 18px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: flex-end;
+
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 22px;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,0.04),
+                rgba(255,255,255,0.01)
+            );
+
+        box-shadow:
+            inset 0 0 35px rgba(0,0,0,0.18);
+    }
+
+    .small-display {
+        color: var(--muted);
+
+        font-size: 15px;
+        font-weight: 500;
+
+        margin-bottom: 8px;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        max-width: 100%;
+    }
+
+    .main-display {
+        color: var(--white);
+
+        font-family: "Space Grotesk", sans-serif;
+
+        font-size: clamp(40px, 11vw, 56px);
+
+        font-weight: 600;
+
+        letter-spacing: -3px;
+
+        white-space: nowrap;
+    }
+
+    .cursor {
+        display: inline-block;
+
+        width: 3px;
+        height: 42px;
+
+        margin-left: 7px;
+
+        vertical-align: middle;
+
+        background: var(--purple-light);
+
+        box-shadow: 0 0 10px var(--purple);
+
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        0%, 45% {
+            opacity: 1;
+        }
+
+        46%, 100% {
+            opacity: 0;
+        }
+    }
+
+    /* Keypad */
+
+    .keypad {
+        display: grid;
+
+        grid-template-columns: repeat(4, 1fr);
+
+        gap: 11px;
+    }
+
+    .key {
+        height: 64px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border: 1px solid rgba(255,255,255,0.045);
+        border-radius: 18px;
+
+        background: var(--button);
+
+        color: var(--white);
+
+        font-family: "Space Grotesk", sans-serif;
+
+        font-size: 19px;
+        font-weight: 600;
+
+        cursor: pointer;
+
+        box-shadow:
+            0 7px 14px rgba(0,0,0,0.16),
+            inset 0 1px 0 rgba(255,255,255,0.025);
+
+        transition:
+            transform 0.15s ease,
+            background 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .key:hover {
+        transform: translateY(-3px);
+
+        background: var(--button-hover);
+
+        border-color: rgba(255,255,255,0.1);
+
+        box-shadow:
+            0 12px 22px rgba(0,0,0,0.22),
+            inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .key:active {
+        transform: scale(0.93);
+    }
+
+    /* Special buttons */
+
+    .function {
+        color: #aeb5ce;
+
+        background: rgba(255,255,255,0.045);
+    }
+
+    .clear {
+        color: #fb7185;
+    }
+
+    .operator {
+        color: var(--cyan);
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(34,211,238,0.10),
+                rgba(139,92,246,0.08)
+            );
+
+        border-color: rgba(34,211,238,0.08);
+    }
+
+    .operator:hover {
+        color: white;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(34,211,238,0.2),
+                rgba(139,92,246,0.15)
+            );
+    }
+
+    .zero {
+        grid-column: span 2;
+    }
+
+    .equals {
+        color: white;
+
+        background:
+            linear-gradient(
+                135deg,
+                #8b5cf6,
+                #6d28d9
+            );
+
+        border-color: rgba(167,139,250,0.3);
+
+        box-shadow:
+            0 8px 25px rgba(139,92,246,0.3),
+            inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+
+    .equals:hover {
+        background:
+            linear-gradient(
+                135deg,
+                #9b6cff,
+                #7c3aed
+            );
+
+        box-shadow:
+            0 12px 30px rgba(139,92,246,0.4),
+            inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    /* Footer */
+
+    .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-top: 17px;
+        padding: 0 4px;
+
+        color: #4d546d;
+
+        font-size: 8px;
+        font-weight: 700;
+
+        letter-spacing: 1.7px;
+    }
+
+    .footer-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .footer-line::before {
+        content: "";
+
+        width: 16px;
+        height: 1px;
+
+        background: #4d546d;
+    }
+
+    /* Responsive */
+
+    @media (max-width: 450px) {
+
+        .calculator {
+            width: 94vw;
+            padding: 16px;
+            border-radius: 25px;
+        }
+
+        .display {
+            height: 140px;
+            padding: 18px;
+        }
+
+        .keypad {
+            gap: 8px;
+        }
+
+        .key {
+            height: 60px;
+            border-radius: 16px;
+        }
+
+        .footer {
+            margin-top: 12px;
+        }
+    }
+
+    @media (max-height: 700px) {
+
+        .calculator {
+            padding: 15px;
+        }
+
+        .header {
+            margin-bottom: 10px;
+        }
+
+        .display {
+            height: 110px;
+            margin-bottom: 10px;
+        }
+
+        .key {
+            height: 52px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="orb orb-one"></div>
+<div class="orb orb-two"></div>
+
+<main class="calculator">
+
+    <header class="header">
+
+        <div class="logo">
+            <span class="logo-dot"></span>
+            NOVA
+        </div>
+
+        <div class="status">
+            <span></span>
+            READY
+        </div>
+
+    </header>
+
+
+    <section class="display">
+
+        <div class="small-display">
+            12 × 8 +
+        </div>
+
+        <div class="main-display">
+            96<span class="cursor"></span>
+        </div>
+
+    </section>
+
+
+    <section class="keypad">
+
+        <button class="key function clear">AC</button>
+        <button class="key function">⌫</button>
+        <button class="key function">%</button>
+        <button class="key operator">÷</button>
+
+        <button class="key">7</button>
+        <button class="key">8</button>
+        <button class="key">9</button>
+        <button class="key operator">×</button>
+
+        <button class="key">4</button>
+        <button class="key">5</button>
+        <button class="key">6</button>
+        <button class="key operator">−</button>
+
+        <button class="key">1</button>
+        <button class="key">2</button>
+        <button class="key">3</button>
+        <button class="key operator">+</button>
+
+        <button class="key zero">0</button>
+        <button class="key">.</button>
+        <button class="key equals">=</button>
+
+    </section>
+
+
+    <footer class="footer">
+
+        <div class="footer-line">
+            PRECISION CALCULATOR
+        </div>
+
+        <div>
+            NOVA / 01
+        </div>
+
+    </footer>
+
+</main>
+
+</body>
+</html>
